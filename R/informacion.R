@@ -53,10 +53,11 @@ preparar_info_de_eleccion <- function(partidos,
 votos_coalicion <- function(bd, partidos){
   coal <- paste(partidos, collapse = "_")
   combinaciones <- map(.x = 1:length(partidos),
-                       ~combinaciones_n(partidos = partidos, .x)) %>% reduce(c)
-
+                       ~paste0("^votos_",combinaciones_n(partidos = partidos, .x), "$")) %>%
+                         reduce(c)
+  browser()
   bd <- bd %>% rowwise() %>%
-    mutate("votos_c_{coal}":=sum(c_across(contains(combinaciones)), na.rm = T)) %>%
+    mutate("votos_c_{coal}":=sum(c_across(matches(combinaciones)), na.rm = T)) %>%
     ungroup()
   return(bd)
 }
