@@ -8,6 +8,7 @@
 #' @examples
 graficar_total_votacion <- function(info){
   info$bd %>%
+    filter(!!sym(info$unidad_analisis)==info$id_unidad_analisis) %>%
     summarise(across(starts_with(paste("votos", info$competidores,
                                        sep="_")),
                      ~sum(.x, na.rm=T)),
@@ -19,6 +20,9 @@ graficar_total_votacion <- function(info){
     mutate(pct=votacion/nominal) %>%
     ggplot(aes(x = reorder(partido, -votacion), y= votacion, fill=partido)) +
     geom_bar(stat="identity", position="dodge") +
+    ggfittext::geom_bar_text(outside = T,
+                             aes(label=glue::glue("{scales::comma(votacion, accuracy=1)}\n
+                                                  ({scales::percent(pct)})")))+
     scale_fill_manual(values=info$colores) +
     labs(title ="Resultados elección diputación 5 federal",
          subtitle="Coahuila 2018", x = "", y = "Votos",
@@ -46,20 +50,20 @@ graficar_total_votacion <- function(info){
 #' @export
 #'
 #' @examples
-graficar_total_comparativo <- function(info, unidad, analisis){
+graficar_total_comparativo <- function(info, analisis){
   color <- info$colores[analisis]
   datos <- info$bd %>%
-    group_by({{unidad}}) %>%
+    group_by(!!sym(info$unidad)) %>%
     summarise(across(contains(analisis),
                      ~sum(.x, na.rm=T)/sum(nominal, na.rm = T)))
   letrero <- datos %>% mutate(across(contains(analisis),~rank(-.x),.names = "letrero"),
                               letrero=glue::glue("Lugar {letrero} de {max(letrero)}"),
                               orientacion=across(contains(analisis),~(.x>.1*.x))) %>%
-    filter(distrito==5)
+    filter(!!sym(info$unidad_analisis)==info$id_unidad_analisis)
   datos %>%
-    ggplot(aes(x = reorder({{unidad}},!!sym(glue::glue("votos_{analisis}"))),
+    ggplot(aes(x = reorder(!!sym(info$unidad),!!sym(glue::glue("votos_{analisis}"))),
                y= !!sym(glue::glue("votos_{analisis}")),
-               alpha=(distrito==5))) +
+               alpha=(!!sym(info$unidad_analisis)==info$id_unidad_analisis))) +
     geom_bar(stat="identity", position="dodge", fill=color) +
     geom_text(data = letrero,
              aes(label=letrero), hjust=letrero$orientacion, color="white")+
@@ -94,15 +98,14 @@ graficar_total_comparativo <- function(info, unidad, analisis){
 #' @export
 #'
 #' @examples
-graficar_distibucion <- function(info=info, analisis, unidad){
-  partido <- analisis %in% info$competidores
-  color <- info$colores[grep(analisis, info$competidores)]
+graficar_distibucion <- function(info=info, analisis){
+  color <- info$colores[analisis]
   info$bd %>%
     mutate(across(contains(analisis), ~.x/nominal)) %>%
-    ggplot(aes(x=as.factor({{unidad}}),
+    ggplot(aes(x=as.factor(!!sym(info$unidad)),
                y=!!sym(glue::glue("votos_{analisis}")),
-               alpha=distrito!=5)) +
-    geom_boxplot(color=color) +
+               alpha=!!sym(info$unidad_analisis)==info$id_unidad_analisis)) +
+    geom_boxplot(fill=color) +
     scale_alpha_manual(values=c(1,0.1)) +
     coord_flip()+
     scale_y_continuous(labels = scales::percent_format())+
@@ -116,3 +119,5 @@ graficar_distibucion <- function(info=info, analisis, unidad){
       plot.title = element_text(size=11)
     )
 }
+
+

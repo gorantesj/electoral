@@ -36,15 +36,44 @@ color <- c("c_pri_pvem_panal"="#C7292E",
 info <- preparar_info_de_eleccion(bd = coah_df_secc_2018,
                                   partidos = partidos,
                                   coaliciones = coaliciones,
+                                  unidad_analisis = "distrito",
+                                  id_unidad_analisis=5,
                                   colores = color)
 ```
 
-## Eleccion de diputados 2015
+## Eleccion de diputados 2018
 
 ```{r}
 # Parametrizar labels
 # Revisar tema
+# Revisar suma contra Cómputos Distritales
+# Falta filtrar por la unidad de análisis
 
 graficar_total_votacion(info)
+
+```
+
+```{r}
+graficar_total_comparativo(info, analisis = "c_pt_morena_es")
+```
+
+
+```{r}
+# Verificar los datos
+# Generalizar a Participación Ciudadana
+# Parametrizar labels
+# Checar cuestiones estéticas
+
+graficar_distibucion(info, analisis = "c_pan_prd_mc")
+```
+
+```{r}
+info$bd %>% 
+  select(glue::glue("votos_{info$competidores}")) %>% 
+  corrr::correlate() %>% 
+  pivot_longer(cols = -term,names_prefix="votos_") %>% 
+  filter(!is.na(value)) 
+  
+
 ```
 

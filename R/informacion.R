@@ -15,7 +15,7 @@ preparar_info_de_eleccion <- function(partidos,
                                       colores,
                                       bd,
                                       unidad_analisis,
-                                      id_analisis,
+                                      id_unidad_analisis,
                                       año_analisis,
                                       nombre_analisis
                                       ){
@@ -25,6 +25,8 @@ preparar_info_de_eleccion <- function(partidos,
                            reduce(c)) %>% sort()
   info$coaliciones <- coaliciones
   info$colores <- colores
+  info$unidad_analisis <- unidad_analisis
+  info$id_unidad_analisis <- id_unidad_analisis
   # Preparar base
   # Renombrar
   bd<- rename_with(bd, tolower)
@@ -55,7 +57,7 @@ votos_coalicion <- function(bd, partidos){
   combinaciones <- map(.x = 1:length(partidos),
                        ~paste0("^votos_",combinaciones_n(partidos = partidos, .x), "$")) %>%
                          reduce(c)
-  browser()
+
   bd <- bd %>% rowwise() %>%
     mutate("votos_c_{coal}":=sum(c_across(matches(combinaciones)), na.rm = T)) %>%
     ungroup()
