@@ -1,0 +1,50 @@
+---
+title: "Coahuila_Distrito_5"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Coahuila_Distrito_5}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(electoral)
+library(tidyverse)
+```
+
+```{r}
+# Leer bases
+df_secc_2018 <- read_csv("~/Dropbox/Ciencia de datos/Consultoría Estadística/Recursos/Externos/INE/Bases de datos/2018/Federal/Diputados Fed_2018_casilla.csv")
+# Obtener base Coahuila-Sección
+coah_df_secc_2018 <- df_secc_2018 %>% filter(NOMBRE_ESTADO=="COAHUILA")
+info <- list()
+partidos <- NULL
+coaliciones <- list(c("pri", "pvem", "panal"),
+                    c("pan","prd","mc"),
+                    c("pt","morena", "es")
+)
+color <- c("c_pri_pvem_panal"="#C7292E",  
+           "c_pan_prd_mc"="#2260BF",
+           "c_pt_morena_es"="#BF3722")
+info <- preparar_info_de_eleccion(bd = coah_df_secc_2018,
+                                  partidos = partidos,
+                                  coaliciones = coaliciones,
+                                  colores = color)
+```
+
+## Eleccion de diputados 2015
+
+```{r}
+# Parametrizar labels
+# Revisar tema
+
+graficar_total_votacion(info)
+```
+
