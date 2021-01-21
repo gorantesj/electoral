@@ -28,7 +28,7 @@ graficar_total_votacion <- function(info){
          subtitle=info$nombre_unidad_analisis, x = "",
          y = "Votos",
          caption = stringr::str_wrap(glue::glue("Fuente: Elaborado por Morant Consultores con información de los Cómputos distritales {info$año_analisis} - INE"), 100),
-                              fill="") +
+         fill="") +
     scale_y_continuous(labels = scales::label_comma(accuracy = 1))+
     theme_bw()+
     theme(text = element_text(color = "grey35"),
@@ -67,7 +67,7 @@ graficar_total_comparativo <- function(info, analisis){
                alpha=(!!sym(info$unidad_analisis)==info$id_unidad_analisis))) +
     geom_bar(stat="identity", position="dodge", fill=color) +
     geom_text(data = letrero %>% filter(orientacion),
-             aes(label=letrero), hjust=1, color="white") +
+              aes(label=letrero), hjust=1, color="white") +
     geom_text(data = letrero %>% filter(!orientacion),
               aes(label=letrero), hjust=0, color="black") +
     labs(title ="Porcentaje de votos respecto a la lista nominal",
@@ -128,6 +128,76 @@ graficar_distibucion <- function(info=info, analisis){
           axis.title = element_text(size = 14, face = "bold"),
           axis.text = element_text(size = 10, face = "bold"))
   return(g)
+}
+
+#' Title
+#'
+#' @param info
+#' @param sf
+#' @param analisis
+#'
+#' @return
+#' @export
+#'
+#' @examples
+graficar_fuerza_electoral <- function(info, sf, analisis){
+  color <- info$colores[analisis]
+  distrito <- info$bd %>% filter(!!sym(info$unidad_analisis)==info$id_unidad_analisis)
+  datos <- distrito %>%
+    group_by(seccion) %>%
+    summarise(across(glue::glue("votos_{info$competidores}"),
+                     ~sum(.x, na.rm = T)/sum(nominal, na.rm = T)))
+  referencias <- datos %>%
+    rowwise() %>%
+    mutate(maximos=max(c_across(starts_with("votos_")),na.rm = T)) %>%
+    ungroup() %>%
+    summarise(maximo=max(c_across(starts_with("votos_")), na.rm = T),
+              mediana=quantile(maximos, na.rm=T, probs=.95))
+  maximo <- referencias %>% pull(maximo)
+  mediana <- referencias %>% pull(mediana)
+  datos <- datos %>% select(seccion,glue::glue("votos_{analisis}" ))
+  mapa <- left_join(datos, sf, by=c("seccion"="SECCION"))
+  ggplot() +
+    geom_sf(data = mapa,
+            aes(fill=!!sym(glue::glue("votos_{analisis}")),
+                geometry=geometry),size=.05, colour = "black",alpha=1) +
+    scale_fill_gradient2(labels=scales::percent_format(accuracy = 1),
+                         high=color,
+                         low=colortools::complementary(color = color, plot = F)[[2]],
+                         limits=c(0,maximo), midpoint = mediana/2) +
+    ggtitle(label= "Distribución de apoyo  - Total de votos entre lista nominal")+
+    theme_void() +
+    labs(fill="Votos entre \nlista nominal") +
+    theme(text=element_text(family="Georgia"),
+          plot.title = element_text(family="Georgia", size = 11, hjust = 0.5),
+          legend.title = element_text(face = "bold", family = "Georgia", size=8),
+          legend.text = element_text(family = "Georgia", size=8),
+          plot.subtitle = element_text(size=5),
+    )
+}
+
+graficar_mapa_ganadores <- function(info, sf){
+  datos <- info$bd %>%
+    filter(!!sym(info$unidad_analisis)==info$id_unidad_analisis) %>%
+    group_by(seccion) %>%
+    summarise(across(glue::glue("votos_{info$competidores}"), ~sum(.x,na.rm = T))) %>%
+    rowwise() %>%
+    mutate(ganador=info$competidores[which.max(c_across(glue::glue("votos_{info$competidores}")))])
+  mapa <- left_join(datos,  sf,by=c("seccion"="SECCION"))
+  ggplot() +
+    geom_sf(data = mapa,
+            aes(fill=ganador, geometry=geometry),
+            size=.05, colour = "black",alpha=0.6) +
+    scale_fill_manual(values = info$colores) +
+    ggtitle(label= "Ganadores")+
+    theme_void() +
+    theme(text=element_text(family="Georgia"),
+          plot.title = element_text(family="Georgia", size = 11, hjust = 0.5),
+          legend.title = element_text(face = "bold", family = "Georgia", size=8),
+          legend.text = element_text(family = "Georgia", size=8),
+          plot.subtitle = element_text(size=5),
+    )
+
 }
 
 

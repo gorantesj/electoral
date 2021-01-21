@@ -69,6 +69,19 @@ graficar_distibucion(info, analisis = "c_pan_prd_mc")
 ```
 
 ```{r}
+library(sf)
+secc <- st_read("~/Dropbox/Ciencia de datos/Consultoría Estadística/Recursos/Externos/INE/SHP/2017/05 - Coahuila/SECCION.shp", stringsAsFactors = FALSE, quiet = TRUE) %>%
+  st_transform(4326) 
+graficar_fuerza_electoral(info, secc, analisis = "c_pan_prd_mc")
+
+```
+
+```{r}
+graficar_mapa_ganadores(info, secc)
+```
+
+
+```{r}
 info$bd %>% 
   select(glue::glue("votos_{info$competidores}")) %>% 
   corrr::correlate() %>% 
@@ -77,4 +90,6 @@ info$bd %>%
   
 
 ```
+
+
 
