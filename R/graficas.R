@@ -59,18 +59,21 @@ graficar_total_comparativo <- function(info, analisis){
                      ~sum(.x, na.rm=T)/sum(nominal, na.rm = T)))
   letrero <- datos %>% mutate(across(contains(analisis),~rank(-.x),.names = "letrero"),
                               letrero=glue::glue("Lugar {letrero} de {max(letrero)}"),
-                              orientacion=across(contains(analisis),~(.x>.1*.x))) %>%
-    filter(!!sym(info$unidad_analisis)==info$id_unidad_analisis)
+                              orientacion=across(contains(analisis),~(.x>.1*.x)))
   datos %>%
     ggplot(aes(x = reorder(!!sym(info$unidad),!!sym(glue::glue("votos_{analisis}"))),
                y= !!sym(glue::glue("votos_{analisis}")),
                alpha=(!!sym(info$unidad_analisis)==info$id_unidad_analisis))) +
     geom_bar(stat="identity", position="dodge", fill=color) +
-    geom_text(data = letrero,
-             aes(label=letrero), hjust=letrero$orientacion, color="white")+
-    labs(title ="Resultados elección diputación 5 federal",
-         subtitle="Coahuila 2018", x = "", y = "Votos",
-         caption = "Fuente: Cómputos distritales 2018 - INE", fill="") +
+    geom_text(data = letrero %>% filter(orientacion),
+             aes(label=letrero), hjust=1, color="white") +
+    geom_text(data = letrero %>% filter(!orientacion),
+              aes(label=letrero), hjust=0, color="black") +
+    labs(title ="Porcentaje de votos respecto a la lista nominal",
+         subtitle=glue::glue("{info$nombre_unidad_analisis} ({analisis})"),
+         x = info$unidad_analisis,
+         y = "Porcentaje de votación",
+         caption = stringr::str_wrap(glue::glue("Fuente: Elaborado por Morant Consultores con información de los Cómputos distritales {info$año_analisis} - INE"), 100), fill="") +
     scale_y_continuous(labels = scales::label_percent(accuracy = 1))+
     scale_alpha_manual(values = c(.5, 1))+
     coord_flip()+
