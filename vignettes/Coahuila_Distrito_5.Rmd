@@ -38,13 +38,14 @@ info <- preparar_info_de_eleccion(bd = coah_df_secc_2018,
                                   coaliciones = coaliciones,
                                   unidad_analisis = "distrito",
                                   id_unidad_analisis=5,
+                                  año_analisis = 2018,
+                                  nombre_unidad_analisis = "Coahuila-Distrito Federal V",
                                   colores = color)
 ```
 
 ## Eleccion de diputados 2018
 
 ```{r}
-# Parametrizar labels
 # Revisar tema
 # Revisar suma contra Cómputos Distritales
 # Falta filtrar por la unidad de análisis

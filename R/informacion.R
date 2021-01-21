@@ -17,7 +17,7 @@ preparar_info_de_eleccion <- function(partidos,
                                       unidad_analisis,
                                       id_unidad_analisis,
                                       año_analisis,
-                                      nombre_analisis
+                                      nombre_unidad_analisis
                                       ){
   info <- list()
   info$competidores <- c(partidos,
@@ -27,6 +27,8 @@ preparar_info_de_eleccion <- function(partidos,
   info$colores <- colores
   info$unidad_analisis <- unidad_analisis
   info$id_unidad_analisis <- id_unidad_analisis
+  info$nombre_unidad_analisis <- nombre_unidad_analisis
+  info$año_analisis <- año_analisis
   # Preparar base
   # Renombrar
   bd<- rename_with(bd, tolower)

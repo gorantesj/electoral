@@ -24,9 +24,10 @@ graficar_total_votacion <- function(info){
                              aes(label=glue::glue("{scales::comma(votacion, accuracy=1)}\n
                                                   ({scales::percent(pct)})")))+
     scale_fill_manual(values=info$colores) +
-    labs(title ="Resultados elección diputación 5 federal",
-         subtitle="Coahuila 2018", x = "", y = "Votos",
-         caption = "Fuente: Cómputos distritales 2018 - INE", fill="") +
+    labs(title ="Resultados elección",
+         subtitle=info$nombre_unidad_analisis, x = "", y = "Votos",
+         caption = stringr::str_wrap(glue::glue("Fuente: Elaborado por Morant Consultores con información de los Cómputos distritales {info$año_analisis} - INE"), 100),
+                              fill="") +
     scale_y_continuous(labels = scales::label_comma(accuracy = 1))+
     theme_bw()+
     theme(text = element_text(color = "grey35"),
