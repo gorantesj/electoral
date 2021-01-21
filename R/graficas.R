@@ -25,7 +25,8 @@ graficar_total_votacion <- function(info){
                                                   ({scales::percent(pct)})")))+
     scale_fill_manual(values=info$colores) +
     labs(title ="Resultados elección",
-         subtitle=info$nombre_unidad_analisis, x = "", y = "Votos",
+         subtitle=info$nombre_unidad_analisis, x = "",
+         y = "Votos",
          caption = stringr::str_wrap(glue::glue("Fuente: Elaborado por Morant Consultores con información de los Cómputos distritales {info$año_analisis} - INE"), 100),
                               fill="") +
     scale_y_continuous(labels = scales::label_comma(accuracy = 1))+
@@ -104,24 +105,29 @@ graficar_total_comparativo <- function(info, analisis){
 #' @examples
 graficar_distibucion <- function(info=info, analisis){
   color <- info$colores[analisis]
-  info$bd %>%
+  g <- info$bd %>%
     mutate(across(contains(analisis), ~.x/nominal)) %>%
     ggplot(aes(x=as.factor(!!sym(info$unidad)),
                y=!!sym(glue::glue("votos_{analisis}")),
                alpha=!!sym(info$unidad_analisis)==info$id_unidad_analisis)) +
     geom_boxplot(fill=color) +
-    scale_alpha_manual(values=c(1,0.1)) +
+    scale_alpha_manual(values=c(0.5,1)) +
     coord_flip()+
     scale_y_continuous(labels = scales::percent_format())+
-    # geom_jitter(color="grey", size=0.4, alpha=0.9) +
-    labs(title ="Distribución de la participiación electoral para diputaciones federales \nTasa de votoación por cada 100 votantes registrados en secciones",
-         subtitle="Coahuila 2018", x = "", y = "Tasa de votación",
-         caption = "Fuente: Cómputos distritales 2018 - INE", fill="") +
+    labs(title ="Distribución del porcentaje de votación respecto a la lista nominal",
+         subtitle=glue::glue("{info$nombre_unidad_analisis} (Análisis por casilla)"),
+         x = "",
+         y = "Tasa de votación",
+         caption = stringr::str_wrap(glue::glue("Fuente: Elaborado por Morant Consultores con información de los Cómputos distritales {info$año_analisis} - INE"), 100), fill="") +
     theme_bw()+
-    theme(
-      legend.position="none",
-      plot.title = element_text(size=11)
-    )
+    theme(text = element_text(color = "grey35"),
+          plot.title = element_text(size = 15, face = "bold",  color = "grey35"),
+          plot.subtitle = element_text(size = 10, face = "bold", colour = "#666666"),
+          plot.caption = element_text(size = 10),
+          legend.position = "none",
+          axis.title = element_text(size = 14, face = "bold"),
+          axis.text = element_text(size = 10, face = "bold"))
+  return(g)
 }
 
 
