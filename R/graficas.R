@@ -216,4 +216,59 @@ graficar_mapa_ganadores <- function(info, sf){
 
 }
 
+graficar_correlacion_partidista <- function(partidos, info_base, info_contraste){
+  b1 <- info_base$bd %>%
+    group_by(seccion) %>%
+    summarise(across(glue::glue("votos_{info$competidores}"),
+                     ~sum(.x, na.rm = T)/sum(nominal, na.rm = T))) %>%
+    rename_with(.cols=-seccion, ~glue::glue("{.x}-df"))
+
+  b2 <- info_contraste$bd %>%
+    group_by(seccion) %>%
+    summarise(across(glue::glue("votos_{info2$competidores}"),
+                     ~sum(.x, na.rm = T)/sum(nominal, na.rm = T)))%>%
+    rename_with(.cols=-seccion, ~glue::glue("{.x}-pr"))
+
+  bd_completa <- inner_join(b1, b2,by="seccion")
+  datos <- bd_completa %>%
+    select(-seccion) %>%
+    corrr::correlate() %>%
+    corrr::shave() %>%
+    pivot_longer(cols = -term, names_prefix="votos_", values_drop_na=T) %>%
+    mutate(term=stringr::str_replace(term, pattern = "votos_", replacement = "")) %>%
+    separate(col = term, sep="-", into=c("partido2","cargo2")) %>%
+    separate(name, sep="-", into=c("partido1","cargo1"))
+  datos <- datos %>% mutate(conservar=F)
+
+  for(i in 1:length(partidos)){
+    datos <- datos %>%
+      mutate(conservar=(grepl(glue::glue("(\\b|_){partidos[i]}\\b"), partido1) &
+                            grepl(glue::glue("(\\b|_){partidos[i]}\\b"), partido2) | conservar))
+
+  }
+  datos %>%
+    filter(conservar) %>%
+    ggplot()+
+    geom_segment(aes(x=1, xend=1, y=0, yend=1),
+                 lineend = "round", size=6, color="#F2F7F2")+
+    geom_segment(aes(x=1, xend=1, y=0, yend=value, color=partido1),
+                 lineend = "round", size=3)+
+    geom_text(aes(x=0, y=0, color=partido1,
+                  label=glue::glue("{round(value,2)}")), size=10) +
+    geom_text(aes(x=1.5, y=0, color=partido1,
+                  label=glue::glue("{partido1}"), vjust=1, size=10)) +
+    coord_polar(theta="y")+
+    scale_y_continuous(limits = c(0,1))+
+    scale_x_continuous(limits = c(0,1.5))+
+    scale_color_manual(values = info$colores,guide=NULL)+
+    theme_void()+
+    theme(text = element_text(color = "grey35",size = 20),
+          strip.background = element_blank(),
+          strip.text.x = element_blank(),
+          plot.title = element_text(size = 15, face = "bold",  color = "grey35"),
+          plot.subtitle = element_text(size = 10, face = "bold", colour = "#666666"),
+          plot.caption = element_text(size = 10),
+          legend.position = "none") +
+    facet_wrap(~partido1)
+}
 
