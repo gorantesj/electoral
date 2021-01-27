@@ -1,0 +1,234 @@
+---
+title: "tepoz"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{tepoz}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(electoral)
+library(tidyverse)
+bd <- read_csv("~/Dropbox/Ciencia de datos/Consultoría Estadística/Recursos/Externos/INE/Bases de datos/2018/Locales/Presidente Municipal/morelos_municipal_2018_casilla.csv")
+info <- list()
+partidos <- c("pri","panal", "ph")
+coaliciones <- list(c("prd", "pvem", "psd"),
+                    c("pan","mc"),
+                    c("pt","morena", "es")
+)
+color <- c("coalición_prd pvem psd"="#E6BD19",  
+           "coalición_pan mc"="#2260BF",
+           "coalición_pt morena es"="#BF3722",
+           "pri"="#23A95D",
+           "panal"="#00A4AC",
+           "ph"="#9F3B77")
+info <- preparar_info_de_eleccion(bd = bd,
+                                  partidos = partidos,
+                                  coaliciones = coaliciones,
+                                  unidad_analisis = "nombre_municipio",
+                                  id_unidad_analisis="TEPOZTLAN",
+                                  año_analisis = 2018,
+                                  nombre_unidad_analisis = "Presidencia municipal-Tepoztlan",
+                                  colores = color)
+```
+
+```{r}
+graficar_total_votacion(info)
+```
+
+```{r}
+graficar_total_comparativo(info, analisis = "coalición_pt morena es")
+```
+
+```{r}
+# Verificar los datos
+# Generalizar a Participación Ciudadana
+# Parametrizar labels
+# Checar cuestiones estéticas
+
+graficar_distibucion(info, analisis = "coalición_pt morena es")
+```
+
+```{r}
+library(sf)
+secc <- st_read("~/Dropbox/Ciencia de datos/Consultoría Estadística/Recursos/Externos/INE/SHP/2017/17 - Morelos/SECCION.shp", stringsAsFactors = FALSE, quiet = TRUE) %>%
+  st_transform(4326) 
+graficar_fuerza_electoral(info, secc, analisis = "coalición_pt morena es")
+```
+
+```{r}
+graficar_mapa_ganadores(info, secc)
+```
+
+```{r}
+# Leer bases
+pr_secc_2018 <- read_csv("~/Dropbox/Ciencia de datos/Consultoría Estadística/Recursos/Externos/INE/Bases de datos/2018/Federal/Presidencia_2018_casilla.csv")
+# Obtener base Coahuila-Sección
+coah_pr_secc_2018 <- pr_secc_2018 %>% filter(NOMBRE_ESTADO=="MORELOS")
+info2 <- list()
+partidos <- c("independiente_1", "independiente_2")
+coaliciones <- list(c("pri", "pvem", "panal"),
+                    c("pan","prd","mc"),
+                    c("pt","morena", "es")
+)
+color <- c("coalición_pri pvem panal"="#23A95D",  
+           "coalición_pan prd mc"="#2260BF",
+           "coalición_pt morena es"="#BF3722",
+           "independiente_1"="#593A85",
+           "independiente_2"="#262954"
+)
+info2 <- preparar_info_de_eleccion(bd = coah_pr_secc_2018,
+                                   partidos = partidos,
+                                   coaliciones = coaliciones,
+                                   unidad_analisis = "distrito",
+                                   id_unidad_analisis=5,
+                                   año_analisis = 2018,
+                                   nombre_unidad_analisis = "Coahuila-Distrito Federal V",
+                                   colores = color)
+```
+
+```{r}
+b1 <- info$bd %>% 
+  group_by(seccion) %>% 
+  summarise(across(glue::glue("votos_{info$competidores}"),
+                   ~sum(.x, na.rm = T)/sum(nominal, na.rm = T))) %>% 
+  rename_with(.cols=-seccion, ~glue::glue("{.x}-df"))
+
+b2 <- info2$bd %>% 
+  group_by(seccion) %>% 
+  summarise(across(glue::glue("votos_{info2$competidores}"),
+                   ~sum(.x, na.rm = T)/sum(nominal, na.rm = T)))%>% 
+  rename_with(.cols=-seccion, ~glue::glue("{.x}-pr"))
+
+bd_completa <- inner_join(b1, b2,by="seccion")
+datos <- bd_completa %>% 
+  select(-seccion) %>% 
+  corrr::correlate() %>% 
+  corrr::shave() %>% 
+  pivot_longer(cols = -term, names_prefix="votos_", values_drop_na=T) %>% 
+  mutate(term=stringr::str_replace(term, pattern = "votos_", replacement = "")) %>% 
+  separate(col = term, sep="-", into=c("partido1","cargo1")) %>% 
+  separate(name, sep="-", into=c("partido2","cargo2")) %>% 
+  filter(grepl("(\\b|_)prd\\b", partido1) & grepl("(\\b|_)prd\\b", partido2)|
+           grepl("(\\b|_)pri\\b", partido1) & grepl("(\\b|_)pri\\b", partido2)|
+           grepl("(\\b|_)pan\\b", partido1) & grepl("(\\b|_)pan\\b", partido2)|
+           grepl("(\\b|_)morena\\b", partido1) & grepl("(\\b|_)morena\\b", partido2))
+
+datos %>% 
+  ggplot()+
+  geom_segment(aes(x=1, xend=1, y=0, yend=1),
+               lineend = "round", size=6, color="#F2F7F2")+
+  geom_segment(aes(x=1, xend=1, y=0, yend=value, color=partido2),
+               lineend = "round", size=3)+
+  geom_text(aes(x=0, y=0, color=partido2,
+                label=glue::glue("{round(value,2)}")), size=10) +
+  geom_text(aes(x=1.5, y=0, color=partido2,
+                label=glue::glue("{partido1}"), vjust=1, size=10)) +
+  coord_polar(theta="y")+
+  scale_y_continuous(limits = c(0,1))+
+  scale_x_continuous(limits = c(0,1.5))+
+  scale_color_manual(values = info$colores,guide=NULL)+
+  theme_void()+
+  theme(text = element_text(color = "grey35",size = 20),
+        strip.background = element_blank(),
+        strip.text.x = element_blank(),
+        plot.title = element_text(size = 15, face = "bold",  color = "grey35"),
+        plot.subtitle = element_text(size = 10, face = "bold", colour = "#666666"),
+        plot.caption = element_text(size = 10),
+        legend.position = "none") +
+  facet_wrap(~partido2)
+```
+
+
+```{r}
+ji <- list(b1,b2) %>% 
+  reduce(inner_join,by="seccion")
+library(broom)
+jo <- ji %>% select(seccion,matches("(\\b|_)pan\\b"), 
+                    matches("(\\b|_)pri\\b"),
+                    matches("(\\b|_)prd\\b"),
+                    matches("(\\b|_)morena\\b")
+                    )
+
+
+jo <- jo %>% 
+  mutate(tipo=cutree(hclust(dist(jo %>% select(-seccion))),k = 6)) %>% 
+  rowwise() %>% 
+  mutate(ganador=which.max(c_across(ends_with("-df"))))
+
+pca_fit <- jo %>% 
+  select(-seccion, -tipo, -ganador) %>% # retain only numeric columns
+  prcomp(scale = TRUE,center = T) # do PCA on scaled data
+
+jo <- pca_fit %>%
+  broom::augment(jo) 
+
+
+
+# define arrow style for plotting
+arrow_style <- arrow(
+  angle = 20, ends = "first", type = "closed", length = grid::unit(8, "pt")
+)
+
+# plot rotation matrix
+ejes <- pca_fit %>%
+  broom::tidy(matrix = "rotation") %>% 
+  pivot_wider(names_from = "PC", 
+              names_prefix = "PC", 
+              values_from = "value") 
+
+jo %>% 
+  ggplot()+
+  geom_point(aes(x=.fittedPC1, y=.fittedPC2, color=as.factor(ganador)))+
+  geom_segment(data = ejes,aes(x=0,y=0,
+                               xend=PC1*max(jo$.fittedPC1)*2,
+                               yend=PC2*max(jo$.fittedPC2)*2))
+ejes <- ejes %>% 
+  mutate(partido=case_when(grepl("_pri", column)~"PRI",
+                           grepl("_pan", column)~"PAN",
+                           grepl("_morena", column)~"MORENA",
+  )) 
+eje_principal <- ejes %>% 
+  group_by(partido) %>% 
+  summarise(across(c(PC1, PC2), ~mean(.x)))
+
+ggplot(ejes)+
+  ggforce::geom_circle(aes(r=.7, x0=0, y0=0), size=5, color="#0B3C49", fill="#F2F7F2")+
+  geom_segment(aes(x=0,y=0,
+                   xend=PC1,
+                   yend=PC2, 
+                   color=partido),
+               alpha=.4, 
+               size=1,
+               lineend = "round", 
+               linejoin = "round")+
+  geom_segment(data=eje_principal,aes(x=0,y=0,
+                                      xend=PC1,
+                                      yend=PC2,
+                                      color=partido),
+               size=1, 
+               lineend = "round", 
+               linejoin = "round")+
+  scale_color_manual(values = c("PRI"="#23A95D",
+                                "PAN"="#2260BF",
+                                "MORENA"="#BF3722"))+
+  annotate(x=0,y=0, geom="point", size=2)+
+  labs(title = "Brújula electoral", 
+       x="Eje principal",
+       y="Eje secundario")+
+  theme(aspect.ratio = 1,
+        panel.background = element_blank()
+  )
+
+```
+
+
+
