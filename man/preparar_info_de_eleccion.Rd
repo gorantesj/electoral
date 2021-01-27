@@ -10,9 +10,9 @@ preparar_info_de_eleccion(
   colores,
   bd,
   unidad_analisis,
-  id_analisis,
+  id_unidad_analisis,
   año_analisis,
-  nombre_analisis
+  nombre_unidad_analisis
 )
 }
 \arguments{

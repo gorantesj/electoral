@@ -7,6 +7,7 @@
 #'
 #' @examples
 graficar_total_votacion <- function(info){
+  # browser()
   info$bd %>%
     filter(!!sym(info$unidad_analisis)==info$id_unidad_analisis) %>%
     summarise(across(starts_with(paste("votos", info$competidores,
@@ -18,9 +19,10 @@ graficar_total_votacion <- function(info){
                         values_to="votacion",
                         names_prefix = "votos_") %>%
     mutate(pct=votacion/nominal) %>%
+    filter(votacion>0) %>%
     ggplot(aes(x = reorder(partido, -votacion), y= votacion, fill=partido)) +
     geom_bar(stat="identity", position="dodge") +
-    ggfittext::geom_bar_text(outside = T,
+    ggfittext::geom_bar_text(outside = T,contrast = T,
                              aes(label=glue::glue("{scales::comma(votacion, accuracy=1)}\n
                                                   ({scales::percent(pct)})")))+
     scale_fill_manual(values=info$colores) +
@@ -37,7 +39,8 @@ graficar_total_votacion <- function(info){
           plot.caption = element_text(size = 10),
           legend.position = "none",
           axis.title = element_text(size = 14, face = "bold"),
-          axis.text = element_text(size = 10, face = "bold"))
+          axis.text = element_text(size = 10, face = "bold")) +
+    coord_flip()
 
 
 }
@@ -52,16 +55,19 @@ graficar_total_votacion <- function(info){
 #' @export
 #'
 #' @examples
-graficar_total_comparativo <- function(info, analisis){
+graficar_total_comparativo <- function(info, analisis, mostrar=7){
   color <- info$colores[analisis]
   datos <- info$bd %>%
     group_by(!!sym(info$unidad)) %>%
     summarise(across(contains(analisis),
                      ~sum(.x, na.rm=T)/sum(nominal, na.rm = T)))
-  letrero <- datos %>% mutate(across(contains(analisis),~rank(-.x),.names = "letrero"),
-                              letrero=glue::glue("Lugar {letrero} de {max(letrero)}"),
-                              orientacion=across(contains(analisis),~(.x>.1*.x)))
-  datos %>%
+  letrero <- datos %>% mutate(across(contains(analisis),~rank(-.x),.names = "posicion"),
+                              letrero=glue::glue("Lugar {posicion} de {max(posicion)}"),
+                              orientacion=if_else(!!sym(glue::glue("votos_{analisis}"))>.1*max(!!sym(glue::glue("votos_{analisis}"))),T,F))
+  referencia <- letrero %>% filter(!!sym(info$unidad_analisis)==info$id_unidad_analisis) %>% pull(posicion)
+  letrero <- letrero %>% filter(posicion>=(referencia-(mostrar-1)/2),
+                                posicion<=(referencia+(mostrar-1)/2))
+  letrero %>%
     ggplot(aes(x = reorder(!!sym(info$unidad),!!sym(glue::glue("votos_{analisis}"))),
                y= !!sym(glue::glue("votos_{analisis}")),
                alpha=(!!sym(info$unidad_analisis)==info$id_unidad_analisis))) +
@@ -103,7 +109,8 @@ graficar_total_comparativo <- function(info, analisis){
 #' @export
 #'
 #' @examples
-graficar_distibucion <- function(info=info, analisis){
+graficar_distibucion <- function(info=info, analisis, comparar=F){
+  if(!comparar) info$bd <- info$bd %>% filter(!!sym(info$unidad_analisis)==info$id_unidad_analisis)
   color <- info$colores[analisis]
   g <- info$bd %>%
     mutate(across(contains(analisis), ~.x/nominal)) %>%
@@ -176,6 +183,15 @@ graficar_fuerza_electoral <- function(info, sf, analisis){
     )
 }
 
+#' Title
+#'
+#' @param info
+#' @param sf
+#'
+#' @return
+#' @export
+#'
+#' @examples
 graficar_mapa_ganadores <- function(info, sf){
   datos <- info$bd %>%
     filter(!!sym(info$unidad_analisis)==info$id_unidad_analisis) %>%

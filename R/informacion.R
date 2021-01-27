@@ -21,7 +21,7 @@ preparar_info_de_eleccion <- function(partidos,
                                       ){
   info <- list()
   info$competidores <- c(partidos,
-                         map(coaliciones, ~glue::glue('c_{paste(.x, collapse = "_")}')) %>%
+                         map(coaliciones, ~glue::glue('coalición_{paste(.x, collapse = " ")}')) %>%
                            reduce(c)) %>% sort()
   info$coaliciones <- coaliciones
   info$colores <- colores
@@ -38,8 +38,8 @@ preparar_info_de_eleccion <- function(partidos,
                 .cols=contains(c(coaliciones %>% unlist(), partidos))) %>%
     mutate(across(starts_with("votos_"), ~as.numeric(.x)))
   bases <- map(coaliciones, ~votos_coalicion(bd, .x))
-  info$bd <- bases %>% reduce(full_join) %>%
-    filter(tipo_casilla!="S")
+  info$bd <- bases %>% reduce(full_join)
+
 
   return(info)
 }
@@ -55,13 +55,13 @@ preparar_info_de_eleccion <- function(partidos,
 #'
 #' @examples
 votos_coalicion <- function(bd, partidos){
-  coal <- paste(partidos, collapse = "_")
+  coal <- paste(partidos, collapse = " ")
   combinaciones <- map(.x = 1:length(partidos),
                        ~paste0("^votos_",combinaciones_n(partidos = partidos, .x), "$")) %>%
                          reduce(c)
 
   bd <- bd %>% rowwise() %>%
-    mutate("votos_c_{coal}":=sum(c_across(matches(combinaciones)), na.rm = T)) %>%
+    mutate("votos_coalición_{coal}":=sum(c_across(matches(combinaciones)), na.rm = T)) %>%
     ungroup()
   return(bd)
 }
