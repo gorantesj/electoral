@@ -210,9 +210,9 @@ graficar_fuerza_electoral <- function(info, sf, analisis, interactiva=F){
               scales::percent(accuracy = 1))
     ) %>%
       lapply(htmltools::HTML)
-    leaflet() %>%
-      addProviderTiles(providers$CartoDB.Positron) %>%
-      addPolygons(
+    leaflet::leaflet() %>%
+      leaflet::addProviderTiles(providers$CartoDB.Positron) %>%
+      leafllet::addPolygons(
         data=mapa,
         fillColor = ~reescala,
         weight = 2,
