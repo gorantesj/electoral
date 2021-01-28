@@ -7,7 +7,8 @@
 #'
 #' @examples
 graficar_total_votacion <- function(info){
-  # browser()
+  names(info$colores) <- stringr::str_replace(stringr::str_to_upper(names(info$colores)),
+                                              pattern="_",replacement = ": ")
   info$bd %>%
     filter(!!sym(info$unidad_analisis)==info$id_unidad_analisis) %>%
     summarise(across(starts_with(paste("votos", info$competidores,
@@ -18,10 +19,15 @@ graficar_total_votacion <- function(info){
                         names_to = "partido",
                         values_to="votacion",
                         names_prefix = "votos_") %>%
-    mutate(pct=votacion/nominal) %>%
+    mutate(pct=votacion/nominal,
+           partido=stringr::str_replace(stringr::str_to_upper(partido),
+                                        pattern="_",replacement = ": ")) %>%
     filter(votacion>0) %>%
-    ggplot(aes(x = reorder(partido, -votacion), y= votacion, fill=partido)) +
+    ggplot(aes(x = reorder(partido, votacion),
+               y= votacion,
+               fill=partido)) +
     geom_bar(stat="identity", position="dodge") +
+    geom_vline(xintercept = 0)+
     ggfittext::geom_bar_text(outside = T,contrast = T,
                              aes(label=glue::glue("{scales::comma(votacion, accuracy=1)}\n
                                                   ({scales::percent(pct)})")))+
@@ -38,7 +44,10 @@ graficar_total_votacion <- function(info){
           plot.subtitle = element_text(size = 10, face = "bold", colour = "#666666"),
           plot.caption = element_text(size = 10),
           legend.position = "none",
+          panel.grid = element_blank(),
+          panel.border =   element_blank(),
           axis.title = element_text(size = 14, face = "bold"),
+          axis.ticks.y=element_blank(),
           axis.text = element_text(size = 10, face = "bold")) +
     coord_flip()
 
