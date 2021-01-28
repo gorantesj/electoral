@@ -61,7 +61,8 @@ graficar_distibucion(info, analisis = "coalición_pt morena es")
 library(sf)
 secc <- st_read("~/Dropbox/Ciencia de datos/Consultoría Estadística/Recursos/Externos/INE/SHP/2017/17 - Morelos/SECCION.shp", stringsAsFactors = FALSE, quiet = TRUE) %>%
   st_transform(4326) 
-graficar_fuerza_electoral(info, secc, analisis = "coalición_pt morena es")
+
+graficar_fuerza_electoral(info, secc, analisis = "coalición_pt morena es",interactiva = T)
 ```
 
 ```{r}
@@ -146,9 +147,9 @@ jo %>%
                                xend=PC1*max(jo$.fittedPC1)*2,
                                yend=PC2*max(jo$.fittedPC2)*2))
 ejes <- ejes %>% 
-  mutate(partido=case_when(grepl("_pri", column)~"PRI",
-                           grepl("_pan", column)~"PAN",
-                           grepl("_morena", column)~"MORENA",
+  mutate(partido=case_when(grepl("(\\b|_)pri\\b", column)~"PRI",
+                           grepl("(\\b|_)pan\\b", column)~"PAN",
+                           grepl("(\\b|_)morena\\b", column)~"MORENA",
   )) 
 eje_principal <- ejes %>% 
   group_by(partido) %>% 

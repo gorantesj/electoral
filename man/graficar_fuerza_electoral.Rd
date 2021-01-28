@@ -4,7 +4,7 @@
 \alias{graficar_fuerza_electoral}
 \title{Title}
 \usage{
-graficar_fuerza_electoral(info, sf, analisis)
+graficar_fuerza_electoral(info, sf, analisis, interactiva = F)
 }
 \arguments{
 \item{analisis}{}

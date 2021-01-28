@@ -20,6 +20,7 @@ Suggests:
 VignetteBuilder: knitr
 Imports: 
     dplyr,
-    ggplot2
+    ggplot2,
+    leaflet
 URL: https://github.com/gorantesj/electoral
 BugReports: https://github.com/gorantesj/electoral/issues
