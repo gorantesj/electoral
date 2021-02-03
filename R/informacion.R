@@ -1,10 +1,10 @@
 # Info de la eleccion
-#' Title
+#' La función básica del paquete. Ayuda a comunicar toda la información necesaria para los futuros procesamientos y gráficas.
 #'
-#' @param partidos
-#' @param coaliciones
-#' @param colores
-#' @param bd
+#' @param partidos vector en minúscula de los partidos **sin coalición** que participan en la elección.
+#' @param coaliciones lista de vectores que se encuentran coaligados.
+#' @param colores lista de vectores de colores con nombre. Los nombres corresponden al partido, o coalición para el que el color es asignado. Por mejorar.
+#' @param bd base de datos con con formato homologado. Combinaciones de partidos separados por  '_'
 #'
 #' @return
 #' @export
