@@ -76,8 +76,12 @@ graficar_total_comparativo <- function(info, analisis, mostrar=7){
   referencia <- letrero %>% filter(!!sym(info$unidad_analisis)==info$id_unidad_analisis) %>% pull(posicion)
   letrero <- letrero %>% filter(posicion>=(referencia-(mostrar-1)/2),
                                 posicion<=(referencia+(mostrar-1)/2))
+  letrero <- letrero %>%
+    mutate(unidad=stringr::str_replace(
+      stringr::str_to_sentence(stringr::str_to_upper(!!sym(info$unidad))),
+      "_",replacement = " "))
   letrero %>%
-    ggplot(aes(x = reorder(!!sym(info$unidad),!!sym(glue::glue("votos_{analisis}"))),
+    ggplot(aes(x = reorder(unidad,!!sym(glue::glue("votos_{analisis}"))),
                y= !!sym(glue::glue("votos_{analisis}")),
                alpha=(!!sym(info$unidad_analisis)==info$id_unidad_analisis))) +
     geom_bar(stat="identity", position="dodge", fill=color) +
@@ -87,7 +91,8 @@ graficar_total_comparativo <- function(info, analisis, mostrar=7){
               aes(label=letrero), hjust=0, color="black") +
     labs(title ="Porcentaje de votos respecto a la lista nominal",
          subtitle=glue::glue("{info$nombre_unidad_analisis} ({analisis})"),
-         x = info$unidad_analisis,
+         x = stringr::str_replace(string=stringr::str_to_sentence(stringr::str_to_upper(info$unidad_analisis)),
+                                pattern = "_",replacement = " "),
          y = "Porcentaje de votación",
          caption = stringr::str_wrap(glue::glue("Fuente: Elaborado por Morant Consultores con información de los Cómputos distritales {info$año_analisis} - INE"), 100), fill="") +
     scale_y_continuous(labels = scales::label_percent(accuracy = 1))+
@@ -99,8 +104,18 @@ graficar_total_comparativo <- function(info, analisis, mostrar=7){
           plot.subtitle = element_text(size = 10, face = "bold", colour = "#666666"),
           plot.caption = element_text(size = 10),
           legend.position = "none",
+          panel.grid = element_blank(),
+          panel.border =   element_blank(),
           axis.title = element_text(size = 14, face = "bold"),
+          axis.ticks.y=element_blank(),
           axis.text = element_text(size = 10, face = "bold"))
+    # theme(text = element_text(color = "grey35"),
+    #       plot.title = element_text(size = 15, face = "bold",  color = "grey35"),
+    #       plot.subtitle = element_text(size = 10, face = "bold", colour = "#666666"),
+    #       plot.caption = element_text(size = 10),
+    #       legend.position = "none",
+    #       axis.title = element_text(size = 14, face = "bold"),
+    #       axis.text = element_text(size = 10, face = "bold"))
 
 
 }
@@ -212,7 +227,7 @@ graficar_fuerza_electoral <- function(info, sf, analisis, interactiva=F){
       lapply(htmltools::HTML)
     leaflet::leaflet() %>%
       leaflet::addProviderTiles(providers$CartoDB.Positron) %>%
-      leafllet::addPolygons(
+      leaflet::addPolygons(
         data=mapa,
         fillColor = ~reescala,
         weight = 2,
@@ -263,6 +278,16 @@ graficar_mapa_ganadores <- function(info, sf){
 
 }
 
+#' Title
+#'
+#' @param partidos
+#' @param info_base
+#' @param info_contraste
+#'
+#' @return
+#' @export
+#'
+#' @examples
 graficar_correlacion_partidista <- function(partidos, info_base, info_contraste){
   b1 <- info_base$bd %>%
     group_by(seccion) %>%
