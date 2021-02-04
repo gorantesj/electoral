@@ -162,7 +162,7 @@ graficar_distibucion <- function(info=info, analisis, comparar=F){
 }
 
 
-#' Title
+#' Title Gráfica en un mapa los resultados electorales por diferentes niveles de agregación.
 #'
 #' @param info base de datos procesada con los votos para cada partido y cada coalición, dividida en secciones, distritos y estado.
 #' @param sf shapefile que se va a utilizar como la base del mapa
@@ -189,7 +189,7 @@ graficar_fuerza_electoral <- function(info, sf, analisis,nivel, interactiva=F){
     rowwise() %>%
     mutate(maximos=max(c_across(starts_with("votos_")),na.rm = T)) %>%
     ungroup() %>%
-    summarise(maximo=max(c_across(starts_with("votos_")), na.rm = T),
+    summarise(maximo=max(maximos, na.rm = T),
               mediana=quantile(maximos, na.rm=T, probs=.5))
   maximo <- referencias %>% pull(maximo)
   mediana <- referencias %>% pull(mediana)
@@ -197,14 +197,16 @@ graficar_fuerza_electoral <- function(info, sf, analisis,nivel, interactiva=F){
   sf<-sf %>% rename("{nivel}":=nivel_mapa)
   mapa <- sf %>% left_join(datos)
   mapa <- mapa %>%
-    mutate(reescala=scales::rescale_mid(scales::rescale_max(!!sym(glue::glue("votos_{analisis}")),
-                                                            from = c(0,maximo)),
-                                        mid = scales::rescale_max(mediana,
-                                                                  from =c(0, maximo))))
-  pal <- scales::gradient_n_pal(values =mapa$reescala ,
-                                c(colortools::complementary(color = color, plot = F)[[2]],
-                                  "white",
-                                  color))
+    mutate(reescala=scales::rescale_mid(scales::rescale(!!sym(glue::glue("votos_{analisis}")),
+                                    from = c(0,maximo),
+                                    to=c(0,1)),
+                                    from=c(0,1),
+                                    to=c(0,1),
+                                    mid=scales::rescale(mediana, from=c(0, maximo), to=c(0,1))))
+  pal <- scales::colour_ramp(c(colortools::complementary(color = color, plot = F)[[2]],
+                       "white",
+                       color),
+                     na.color = "grey30", alpha = FALSE)
   mapa <- mapa %>% mutate(reescala=pal(reescala))
   if(!interactiva){
       ggplot() +
@@ -234,7 +236,7 @@ graficar_fuerza_electoral <- function(info, sf, analisis,nivel, interactiva=F){
     ) %>%
       lapply(htmltools::HTML)
     leaflet::leaflet() %>%
-      leaflet::addProviderTiles(providers$CartoDB.Positron) %>%
+      leaflet::addProviderTiles(leaflet::providers$CartoDB.Positron) %>%
       leaflet::addPolygons(
         data=mapa,
         fillColor = ~reescala,
@@ -245,7 +247,7 @@ graficar_fuerza_electoral <- function(info, sf, analisis,nivel, interactiva=F){
         dashArray = "1",
         fillOpacity = 0.7,
         label = labels,
-        labelOptions = labelOptions(
+        labelOptions = leaflet::labelOptions(
           style = list("font-weight" = "normal", padding = "3px 8px"),
           textsize = "15px",
           direction = "auto"))

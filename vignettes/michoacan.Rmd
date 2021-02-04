@@ -19,6 +19,7 @@ knitr::opts_chunk$set(
 library(tidyverse)
 #bd <- read_csv("~/Downloads/michoacan_municipal_2018_casilla.csv")
 bd <- read_csv("~/Downloads/Presidencia_2018_casilla.csv")
+bd <- read_csv("~/Dropbox/Ciencia de datos/Consultoría Estadística/Recursos/Externos/INE/Bases de datos/2018/Federal/Presidencia_2018_casilla.csv")
 bd <- filter(bd, NOMBRE_ESTADO=="MICHOACÁN")
 bd <- rename(bd, "nombre_edo"="NOMBRE_ESTADO", "edo"="ESTADO")
 info <- list()
@@ -43,6 +44,7 @@ info <- electoral::preparar_info_de_eleccion(bd = bd,
 
 
 ```
+
 ## Mapas
 
 
@@ -63,6 +65,8 @@ graficar_fuerza_electoral(info, secc, analisis = "coalición_pt morena es",nivel
 ```
 
 ## Barras
+=======
+
 
 ```{r}
 graficar_total_votacion(info)
