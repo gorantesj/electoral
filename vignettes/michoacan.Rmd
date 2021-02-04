@@ -20,6 +20,7 @@ library(tidyverse)
 #bd <- read_csv("~/Downloads/michoacan_municipal_2018_casilla.csv")
 bd <- read_csv("~/Downloads/Presidencia_2018_casilla.csv")
 bd <- filter(bd, NOMBRE_ESTADO=="MICHOACÁN")
+bd <- rename(bd, "nombre_edo"="NOMBRE_ESTADO", "edo"="ESTADO")
 info <- list()
 partidos <- c("independiente_1","independiente_2")
 coaliciones <- list(c("pan",  "prd","mc"),
@@ -50,9 +51,19 @@ graficar_total_votacion(info)
 
 ```{r}
 library(sf)
-require(leaflet)
+library(leaflet)
 secc <- st_read("~/Downloads/SECCION.shp", stringsAsFactors = FALSE, quiet = TRUE) %>%
   st_transform(4326) 
 
-graficar_fuerza_electoral(info, secc, analisis = "coalición_pt morena es",interactiva = T)
+graficar_fuerza_electoral_dis(info, secc, analisis = "coalición_pt morena es",nivel="seccion", interactiva = T)
+secc <- st_read("~/Downloads/DISTRITO_FEDERAL.shp", stringsAsFactors = FALSE, quiet = TRUE) %>%
+  st_transform(4326) 
+graficar_fuerza_electoral_dis(info, secc, analisis = "coalición_pt morena es",nivel="distrito", interactiva = T)
+
+```
+```{r}
+dis <- st_read("~/Downloads/DISTRITO_FEDERAL.shp", stringsAsFactors = FALSE, quiet = TRUE) %>%
+  st_transform(4326) 
+
+graficar_fuerza_electoral_dis(info, dis, analisis = "coalición_pt morena es",interactiva = T)
 ```
