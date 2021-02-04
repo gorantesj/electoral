@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 ```{r setup}
 library(electoral)
 library(tidyverse)
-bd <- read_csv("~/Dropbox/Ciencia de datos/Consultoría Estadística/Recursos/Externos/INE/Bases de datos/2018/Locales/Presidente Municipal/morelos_municipal_2018_casilla.csv")
+bd <- read_csv("~/Dropbox/Ciencia de datos/Consultoría Estadística/Recursos/Externos/INE/Bases de datos/2018/Locales/Presidente Municipal/morelos_municipal_2018_casilla.csv")
 info <- list()
 partidos <- c("pri","panal", "ph")
 coaliciones <- list(c("prd", "pvem", "psd"),
