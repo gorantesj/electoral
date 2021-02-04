@@ -182,7 +182,7 @@ graficar_fuerza_electoral <- function(info, sf, analisis, interactiva=F){
     rowwise() %>%
     mutate(maximos=max(c_across(starts_with("votos_")),na.rm = T)) %>%
     ungroup() %>%
-    summarise(maximo=max(c_across(starts_with("votos_")), na.rm = T),
+    summarise(maximo=max(maximos, na.rm = T),
               mediana=quantile(maximos, na.rm=T, probs=.5))
   maximo <- referencias %>% pull(maximo)
   mediana <- referencias %>% pull(mediana)
@@ -193,11 +193,14 @@ graficar_fuerza_electoral <- function(info, sf, analisis, interactiva=F){
                                                             from = c(0,maximo)),
                                         mid = scales::rescale_max(mediana,
                                                                   from =c(0, maximo))))
-  pal <- scales::gradient_n_pal(values =mapa$reescala ,
-                                c(colortools::complementary(color = color, plot = F)[[2]],
+  pal <- colorRamp(c(colortools::complementary(color = color, plot = F)[[2]],
                                   "white",
                                   color))
-  mapa <- mapa %>% mutate(reescala=pal(reescala))
+  browser()
+  mapa <- mapa %>%
+    # slice(1:5) %>%
+    mutate(reescala=if_else(is.na(reescala),NA_character_,
+                            rgb(pal(reescala),maxColorValue = 255)))
   if(!interactiva){
     ggplot() +
       geom_sf(data = mapa,
