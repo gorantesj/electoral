@@ -45,7 +45,8 @@ graficar_total_votacion(info)
 ```
 
 ```{r}
-graficar_total_comparativo(info, analisis = "coalición_pt morena es")
+graficar_total_comparativo(info, 
+                           analisis = "coalición_pt morena es")
 ```
 
 ```{r}

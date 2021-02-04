@@ -2,7 +2,7 @@
 % Please edit documentation in R/informacion.R
 \name{preparar_info_de_eleccion}
 \alias{preparar_info_de_eleccion}
-\title{Title}
+\title{La función básica del paquete. Ayuda a comunicar toda la información necesaria para los futuros procesamientos y gráficas.}
 \usage{
 preparar_info_de_eleccion(
   partidos,
@@ -16,11 +16,17 @@ preparar_info_de_eleccion(
 )
 }
 \arguments{
-\item{bd}{}
+\item{partidos}{vector en minúscula de los partidos \strong{sin coalición} que participan en la elección.}
+
+\item{coaliciones}{lista de vectores que se encuentran coaligados.}
+
+\item{colores}{lista de vectores de colores con nombre. Los nombres corresponden al partido, o coalición para el que el color es asignado. Por mejorar.}
+
+\item{bd}{base de datos con con formato homologado. Combinaciones de partidos separados por  '_'}
 }
 \value{
 
 }
 \description{
-Title
+La función básica del paquete. Ayuda a comunicar toda la información necesaria para los futuros procesamientos y gráficas.
 }
