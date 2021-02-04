@@ -75,7 +75,7 @@ info_dis <- preparar_info_de_eleccion(bd = bd,
                                   unidad_analisis = "nombre_distrito",
                                   id_unidad_analisis="ZAMORA DE HIDALGO",
                                   año_analisis = 2018,
-                                  nombre_unidad_analisis = "Elección presidencial- Zamora de Hidalgo",
+                                  nombre_unidad_analisis = "Elección presidencial- Distrito Zamora de Hidalgo",
                                   colores = color)
 graficar_total_votacion(info_dis)
 
