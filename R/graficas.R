@@ -161,91 +161,6 @@ graficar_distibucion <- function(info=info, analisis, comparar=F){
   return(g)
 }
 
-#' Title
-#'
-#' @param info
-#' @param sf
-#' @param analisis
-#'
-#' @return
-#' @export
-#'
-#' @examples
-graficar_fuerza_electoral <- function(info, sf, analisis, interactiva=F){
-  color <- info$colores[analisis]
-  distrito <- info$bd %>% filter(!!sym(info$unidad_analisis)==info$id_unidad_analisis)
-  datos <- distrito %>%
-    group_by(seccion) %>%
-    summarise(across(glue::glue("votos_{info$competidores}"),
-                     ~sum(.x, na.rm = T)/sum(nominal, na.rm = T)))
-  datos <- datos[is.finite(rowSums(datos)),]
-  referencias <- datos %>%
-    rowwise() %>%
-    mutate(maximos=max(c_across(starts_with("votos_")),na.rm = T)) %>%
-    ungroup() %>%
-    summarise(maximo=max(c_across(starts_with("votos_")), na.rm = T),
-              mediana=quantile(maximos, na.rm=T, probs=.5))
-
-  maximo <- referencias %>% pull(maximo)
-  mediana <- referencias %>% pull(mediana)
-  datos <- datos %>% select(seccion,glue::glue("votos_{analisis}" ))
-  mapa <- sf %>% right_join(datos, by = c("SECCION"="seccion"))
-  mapa <- mapa %>%
-    mutate(reescala=scales::rescale_mid(scales::rescale_max(!!sym(glue::glue("votos_{analisis}")),
-                                                            from = c(0,maximo)),
-                                        mid = scales::rescale_max(mediana,
-                                                                  from =c(0, maximo))))
-  pal <- scales::gradient_n_pal(values =mapa$reescala ,
-                                c(colortools::complementary(color = color, plot = F)[[2]],
-                                  "white",
-                                  color))
-  mapa <- mapa %>% mutate(reescala=pal(reescala))
-  if(!interactiva){
-    ggplot() +
-      geom_sf(data = mapa,
-              aes(fill=reescala,
-                  geometry=geometry),size=.05, colour = "black",alpha=1) +
-      scale_fill_identity()+
-      ggtitle(label= "Distribución de apoyo  - Total de votos entre lista nominal")+
-      theme_void() +
-      labs(fill="Votos entre \nlista nominal") +
-      theme(text=element_text(family="Georgia"),
-            plot.title = element_text(family="Georgia", size = 11, hjust = 0.5),
-            legend.title = element_text(face = "bold", family = "Georgia", size=8),
-            legend.text = element_text(family = "Georgia", size=8),
-            plot.subtitle = element_text(size=5),
-      )
-
-  }
-  else{
-
-    labels <- sprintf(
-      "<strong>%s</strong><br/>%s",
-      paste("Seccion: ", mapa$SECCION),
-      paste(glue::glue("{analisis}"),
-            mapa %>% pull(!!sym(glue::glue("votos_{analisis}"))) %>%
-              scales::percent(accuracy = 1))
-    ) %>%
-      lapply(htmltools::HTML)
-    leaflet::leaflet() %>%
-      leaflet::addProviderTiles(providers$CartoDB.Positron) %>%
-      leaflet::addPolygons(
-        data=mapa,
-        fillColor = ~reescala,
-        weight = 2,
-        opacity = 1,
-        color = "grey",
-        group = "Morena",
-        dashArray = "1",
-        fillOpacity = 0.7,
-        label = labels,
-        labelOptions = labelOptions(
-          style = list("font-weight" = "normal", padding = "3px 8px"),
-          textsize = "15px",
-          direction = "auto"))
-  }
-
-}
 
 #' Title
 #'
@@ -257,7 +172,7 @@ graficar_fuerza_electoral <- function(info, sf, analisis, interactiva=F){
 #' @export
 #'
 #' @examples
-graficar_fuerza_electoral_dis <- function(info, sf, analisis,nivel, interactiva=F){
+graficar_fuerza_electoral <- function(info, sf, analisis,nivel, interactiva=F){
   nivel_mapa <- switch (nivel,
     seccion = "SECCION", distrito="DISTRITO_F"
   )
@@ -278,7 +193,7 @@ graficar_fuerza_electoral_dis <- function(info, sf, analisis,nivel, interactiva=
   mediana <- referencias %>% pull(mediana)
   datos <- datos %>% select(!!sym(nivel),glue::glue("votos_{analisis}" ))
   sf<-sf %>% rename("{nivel}":=nivel_mapa)
-  mapa <- sf %>% right_join(datos)
+  mapa <- sf %>% left_join(datos)
   mapa <- mapa %>%
     mutate(reescala=scales::rescale_mid(scales::rescale_max(!!sym(glue::glue("votos_{analisis}")),
                                                             from = c(0,maximo)),
@@ -290,7 +205,7 @@ graficar_fuerza_electoral_dis <- function(info, sf, analisis,nivel, interactiva=
                                   color))
   mapa <- mapa %>% mutate(reescala=pal(reescala))
   if(!interactiva){
-    ggplot() +
+      ggplot() +
       geom_sf(data = mapa,
               aes(fill=reescala,
                   geometry=geometry),size=.05, colour = "black",alpha=1) +
@@ -310,7 +225,7 @@ graficar_fuerza_electoral_dis <- function(info, sf, analisis,nivel, interactiva=
 
     labels <- sprintf(
       "<strong>%s</strong><br/>%s",
-      paste("Distrito: ", mapa$DISTRITO_F),
+      paste(nivel, mapa %>% pull(!!sym(nivel))),
       paste(glue::glue("{analisis}"),
             mapa %>% pull(!!sym(glue::glue("votos_{analisis}"))) %>%
               scales::percent(accuracy = 1))

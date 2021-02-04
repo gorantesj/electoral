@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-library(electoral)
+#library(electoral)
 library(tidyverse)
 #bd <- read_csv("~/Downloads/michoacan_municipal_2018_casilla.csv")
 bd <- read_csv("~/Downloads/Presidencia_2018_casilla.csv")
@@ -32,7 +32,7 @@ color <- c("coalición_pan prd mc"="#2260BF",
            "coalición_pri pvem panal"="#23A95D", 
            "independiente_1"="grey", 
            "independiente_2"="purple3")
-info <- preparar_info_de_eleccion(bd = bd,
+info <- electoral::preparar_info_de_eleccion(bd = bd,
                                   partidos = partidos,
                                   coaliciones = coaliciones,
                                   unidad_analisis = "nombre_edo",
@@ -43,27 +43,56 @@ info <- preparar_info_de_eleccion(bd = bd,
 
 
 ```
-```{r}
-graficar_total_votacion(info)
+## Mapas
 
-```
 
 
 ```{r}
 library(sf)
 library(leaflet)
-secc <- st_read("~/Downloads/SECCION.shp", stringsAsFactors = FALSE, quiet = TRUE) %>%
-  st_transform(4326) 
-
-graficar_fuerza_electoral_dis(info, secc, analisis = "coalición_pt morena es",nivel="seccion", interactiva = T)
 secc <- st_read("~/Downloads/DISTRITO_FEDERAL.shp", stringsAsFactors = FALSE, quiet = TRUE) %>%
   st_transform(4326) 
-graficar_fuerza_electoral_dis(info, secc, analisis = "coalición_pt morena es",nivel="distrito", interactiva = T)
+graficar_fuerza_electoral(info, secc, analisis = "coalición_pt morena es",nivel="distrito", interactiva = T)
 
 ```
 ```{r}
-dis <- st_read("~/Downloads/DISTRITO_FEDERAL.shp", stringsAsFactors = FALSE, quiet = TRUE) %>%
+secc <- st_read("~/Dropbox (Selva)/Ciencia de datos/Consultoría Estadística/Recursos/Externos/INE/SHP/2017/16 - Michoacán/SECCION.shp", stringsAsFactors = FALSE, quiet = TRUE) %>%
   st_transform(4326) 
+graficar_fuerza_electoral(info, secc, analisis = "coalición_pt morena es",nivel="seccion", interactiva = T)
 
-graficar_fuerza_electoral_dis(info, dis, analisis = "coalición_pt morena es",interactiva = T)
+```
+
+## Barras
+
+```{r}
+graficar_total_votacion(info)
+
+```
+```{r}
+info_dis <- preparar_info_de_eleccion(bd = bd,
+                                  partidos = partidos,
+                                  coaliciones = coaliciones,
+                                  unidad_analisis = "nombre_distrito",
+                                  id_unidad_analisis="ZAMORA DE HIDALGO",
+                                  año_analisis = 2018,
+                                  nombre_unidad_analisis = "Elección presidencial- Zamora de Hidalgo",
+                                  colores = color)
+graficar_total_votacion(info_dis)
+
+```
+
+
+
+
+```{r}
+info_secc <- preparar_info_de_eleccion(bd = bd,
+                                  partidos = partidos,
+                                  coaliciones = coaliciones,
+                                  unidad_analisis = "seccion",
+                                  id_unidad_analisis=411,
+                                  año_analisis = 2018,
+                                  nombre_unidad_analisis = "Elección presidencial- Sección 411",
+                                  colores = color)
+graficar_total_votacion(info_secc)
+
 ```
