@@ -43,6 +43,7 @@ preparar_info_de_eleccion <- function(partidos,
   info$bd <- bases %>% reduce(full_join)
 
 
+
   return(info)
 }
 

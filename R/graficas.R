@@ -1,6 +1,6 @@
 #' Title
 #'
-#' @param info
+#' @param info base de datos procesada con los votos para cada partido y cada coalición, dividida en secciones, distritos y estado.
 #'
 #' @return
 #' @export
@@ -161,23 +161,30 @@ graficar_distibucion <- function(info=info, analisis, comparar=F){
   return(g)
 }
 
-#' Title
+
+#' Title Gráfica en un mapa los resultados electorales por diferentes niveles de agregación.
 #'
-#' @param info
-#' @param sf
-#' @param analisis
+#' @param info base de datos procesada con los votos para cada partido y cada coalición, dividida en secciones, distritos y estado.
+#' @param sf shapefile que se va a utilizar como la base del mapa
+#' @param analisis colición para la cual se va a graficar su distribución de votos
+#' @param nivel nivel cartográfico de interés para el mapa
+#' @param interactiva función lógico en la que F es un mapa fijo y V un mapa interactivo
 #'
 #' @return
 #' @export
 #'
 #' @examples
-graficar_fuerza_electoral <- function(info, sf, analisis, interactiva=F){
+graficar_fuerza_electoral <- function(info, sf, analisis,nivel, interactiva=F){
+  nivel_mapa <- switch (nivel,
+    seccion = "SECCION", distrito="DISTRITO_F"
+  )
   color <- info$colores[analisis]
   distrito <- info$bd %>% filter(!!sym(info$unidad_analisis)==info$id_unidad_analisis)
   datos <- distrito %>%
-    group_by(seccion) %>%
+    group_by(!!sym(nivel)) %>%
     summarise(across(glue::glue("votos_{info$competidores}"),
                      ~sum(.x, na.rm = T)/sum(nominal, na.rm = T)))
+  datos <- datos[is.finite(rowSums(datos)),]
   referencias <- datos %>%
     rowwise() %>%
     mutate(maximos=max(c_across(starts_with("votos_")),na.rm = T)) %>%
@@ -186,9 +193,9 @@ graficar_fuerza_electoral <- function(info, sf, analisis, interactiva=F){
               mediana=quantile(maximos, na.rm=T, probs=.5))
   maximo <- referencias %>% pull(maximo)
   mediana <- referencias %>% pull(mediana)
-  datos <- datos %>% select(seccion,glue::glue("votos_{analisis}" ))
-  mapa <- sf %>% right_join(datos, by = c("SECCION"="seccion"))
-
+  datos <- datos %>% select(!!sym(nivel),glue::glue("votos_{analisis}" ))
+  sf<-sf %>% rename("{nivel}":=nivel_mapa)
+  mapa <- sf %>% left_join(datos)
   mapa <- mapa %>%
     mutate(reescala=scales::rescale_mid(scales::rescale(!!sym(glue::glue("votos_{analisis}")),
                                     from = c(0,maximo),
@@ -202,7 +209,7 @@ graficar_fuerza_electoral <- function(info, sf, analisis, interactiva=F){
                      na.color = "grey30", alpha = FALSE)
   mapa <- mapa %>% mutate(reescala=pal(reescala))
   if(!interactiva){
-    ggplot() +
+      ggplot() +
       geom_sf(data = mapa,
               aes(fill=reescala,
                   geometry=geometry),size=.05, colour = "black",alpha=1) +
@@ -222,7 +229,7 @@ graficar_fuerza_electoral <- function(info, sf, analisis, interactiva=F){
 
     labels <- sprintf(
       "<strong>%s</strong><br/>%s",
-      paste("Seccion: ", mapa$SECCION),
+      paste(nivel, mapa %>% pull(!!sym(nivel))),
       paste(glue::glue("{analisis}"),
             mapa %>% pull(!!sym(glue::glue("votos_{analisis}"))) %>%
               scales::percent(accuracy = 1))
@@ -247,6 +254,45 @@ graficar_fuerza_electoral <- function(info, sf, analisis, interactiva=F){
   }
 
 }
+
+#' Title
+#'
+#' @param info
+#' @param sf
+#'
+#' @return
+#' @export
+#'
+#' @examples
+graficar_mapa_ganadores <- function(info, sf){
+  datos <- info$bd %>%
+    filter(!!sym(info$unidad_analisis)==info$id_unidad_analisis) %>%
+    group_by(seccion) %>%
+    summarise(across(glue::glue("votos_{info$competidores}"), ~sum(.x,na.rm = T))) %>%
+    rowwise() %>%
+    mutate(ganador=info$competidores[which.max(c_across(glue::glue("votos_{info$competidores}")))])
+  mapa <- left_join(datos,  sf,by=c("seccion"="SECCION"))
+  ggplot() +
+    geom_sf(data = mapa,
+            aes(fill=ganador, geometry=geometry),
+            size=.05, colour = "black",alpha=0.6) +
+    scale_fill_manual(values = info$colores) +
+    ggtitle(label= "Ganadores")+
+    theme_void() +
+    theme(text=element_text(family="Georgia"),
+          plot.title = element_text(family="Georgia", size = 11, hjust = 0.5),
+          legend.title = element_text(face = "bold", family = "Georgia", size=8),
+          legend.text = element_text(family = "Georgia", size=8),
+          plot.subtitle = element_text(size=5),
+    )
+
+}
+
+
+
+
+
+
 
 #' Title
 #'
