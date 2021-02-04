@@ -188,19 +188,19 @@ graficar_fuerza_electoral <- function(info, sf, analisis, interactiva=F){
   mediana <- referencias %>% pull(mediana)
   datos <- datos %>% select(seccion,glue::glue("votos_{analisis}" ))
   mapa <- sf %>% right_join(datos, by = c("SECCION"="seccion"))
+
   mapa <- mapa %>%
-    mutate(reescala=scales::rescale_mid(scales::rescale_max(!!sym(glue::glue("votos_{analisis}")),
-                                                            from = c(0,maximo)),
-                                        mid = scales::rescale_max(mediana,
-                                                                  from =c(0, maximo))))
-  pal <- colorRamp(c(colortools::complementary(color = color, plot = F)[[2]],
-                                  "white",
-                                  color))
-  browser()
-  mapa <- mapa %>%
-    # slice(1:5) %>%
-    mutate(reescala=if_else(is.na(reescala),NA_character_,
-                            rgb(pal(reescala),maxColorValue = 255)))
+    mutate(reescala=scales::rescale_mid(scales::rescale(!!sym(glue::glue("votos_{analisis}")),
+                                    from = c(0,maximo),
+                                    to=c(0,1)),
+                                    from=c(0,1),
+                                    to=c(0,1),
+                                    mid=scales::rescale(mediana, from=c(0, maximo), to=c(0,1))))
+  pal <- scales::colour_ramp(c(colortools::complementary(color = color, plot = F)[[2]],
+                       "white",
+                       color),
+                     na.color = "grey30", alpha = FALSE)
+  mapa <- mapa %>% mutate(reescala=pal(reescala))
   if(!interactiva){
     ggplot() +
       geom_sf(data = mapa,
@@ -229,7 +229,7 @@ graficar_fuerza_electoral <- function(info, sf, analisis, interactiva=F){
     ) %>%
       lapply(htmltools::HTML)
     leaflet::leaflet() %>%
-      leaflet::addProviderTiles(providers$CartoDB.Positron) %>%
+      leaflet::addProviderTiles(leaflet::providers$CartoDB.Positron) %>%
       leaflet::addPolygons(
         data=mapa,
         fillColor = ~reescala,
@@ -240,7 +240,7 @@ graficar_fuerza_electoral <- function(info, sf, analisis, interactiva=F){
         dashArray = "1",
         fillOpacity = 0.7,
         label = labels,
-        labelOptions = labelOptions(
+        labelOptions = leaflet::labelOptions(
           style = list("font-weight" = "normal", padding = "3px 8px"),
           textsize = "15px",
           direction = "auto"))
