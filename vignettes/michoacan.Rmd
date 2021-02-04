@@ -19,6 +19,7 @@ library(electoral)
 library(tidyverse)
 #bd <- read_csv("~/Downloads/michoacan_municipal_2018_casilla.csv")
 bd <- read_csv("~/Downloads/Presidencia_2018_casilla.csv")
+bd <- read_csv("~/Dropbox/Ciencia de datos/Consultoría Estadística/Recursos/Externos/INE/Bases de datos/2018/Federal/Presidencia_2018_casilla.csv")
 bd <- filter(bd, NOMBRE_ESTADO=="MICHOACÁN")
 info <- list()
 partidos <- c("independiente_1","independiente_2")
@@ -42,6 +43,7 @@ info <- preparar_info_de_eleccion(bd = bd,
 
 
 ```
+
 ```{r}
 graficar_total_votacion(info)
 

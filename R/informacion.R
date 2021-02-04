@@ -36,7 +36,7 @@ preparar_info_de_eleccion <- function(partidos,
   # Volver numérica y agregar prefijo
   bd <- bd %>%
     rename_with(~glue::glue("votos_{.x}"),
-                .cols=contains(c(coaliciones %>% unlist(), partidos))) %>%
+                .cols=matches(glue::glue("(\\b|_)({paste(c(coaliciones %>% unlist(), partidos), collapse = '|')})(\\b|_)"))) %>%
     mutate(across(starts_with("votos_"), ~as.numeric(.x)))
   # Correr coaliciones
   bases <- map(coaliciones, ~votos_coalicion(bd, .x))
@@ -60,7 +60,11 @@ votos_coalicion <- function(bd, partidos){
   coal <- paste(partidos, collapse = " ")
   bd <- bd %>%
     rowwise() %>%
-    mutate("votos_coalición_{coal}":=sum(c_across(matches(paste(partidos, collapse = "|"))), na.rm = T)) %>%
+    mutate("votos_coalición_{coal}":=sum(
+      c_across(
+        matches(
+          glue::glue("(\\b|_)({paste(partidos, collapse = '|')})(\\b|_)"))),
+      na.rm = T)) %>%
     ungroup()
   return(bd)
 }
