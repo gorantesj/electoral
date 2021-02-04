@@ -20,7 +20,6 @@ library(tidyverse)
 #bd <- read_csv("~/Downloads/michoacan_municipal_2018_casilla.csv")
 bd <- read_csv("~/Downloads/Presidencia_2018_casilla.csv")
 bd <- filter(bd, NOMBRE_ESTADO=="MICHOACÁN")
-bd <- rename(bd, "NOMBRE_EDO"="NOMBRE_ESTADO", "EDO"="ESTADO")
 info <- list()
 partidos <- c("independiente_1","independiente_2")
 coaliciones <- list(c("pan",  "prd","mc"),
