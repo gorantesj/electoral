@@ -6,7 +6,7 @@
 #' @export
 #'
 #' @examples
-#' @import dplyr ggplot2 leaflet tidyr
+#' @import dplyr ggplot2 leaflet tidyr purrr
 graficar_total_votacion <- function(info){
   names(info$colores) <- stringr::str_replace(stringr::str_to_upper(names(info$colores)),
                                               pattern="_",replacement = ": ")

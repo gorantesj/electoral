@@ -20,6 +20,7 @@ Suggests:
 VignetteBuilder: knitr
 Imports: 
     dplyr,
+    purrr,
     tidyr,
     colortools,
     corrr,
