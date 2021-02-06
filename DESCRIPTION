@@ -20,6 +20,14 @@ Suggests:
 VignetteBuilder: knitr
 Imports: 
     dplyr,
+    tidyr,
+    colortools,
+    corrr,
+    ggfittext,
+    glue,
+    htmltools,
+    scales,
+    stringr,
     ggplot2,
     leaflet
 URL: https://github.com/gorantesj/electoral
