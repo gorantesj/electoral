@@ -258,6 +258,19 @@ graficar_fuerza_electoral <- function(info, sf, analisis,nivel, interactiva=F){
 
 }
 
+#' Title Gráfica en un mapa los resultados electorales por diferentes niveles de agregación.
+#'
+#' @param info base de datos procesada con los votos para cada partido y cada coalición, dividida en secciones, distritos y estado.
+#' @param sf shapefile que se va a utilizar como la base del mapa
+#' @param analisis colición para la cual se va a graficar su distribución de votos
+#' @param nivel nivel cartográfico de interés para el mapa
+#' @param interactiva función lógico en la que F es un mapa fijo y V un mapa interactivo
+#'
+#' @return
+#' @export
+#'
+#' @examples
+
 fuerza_electoral_proxy <- function(info, sf, analisis,nivel, interactiva=F){
   nivel_mapa <- switch (nivel,
                         seccion = "SECCION", distrito="DISTRITO_F"
