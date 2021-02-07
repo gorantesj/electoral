@@ -241,7 +241,7 @@ graficar_fuerza_electoral <- function(info, sf, analisis,nivel, interactiva=F){
       leaflet::addPolygons(
         data=mapa,
         fillColor = ~reescala,
-        weight = 2,
+        weight = 1,
         opacity = 1,
         color = "grey",
         group = "Morena",
