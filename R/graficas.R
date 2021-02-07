@@ -271,7 +271,7 @@ graficar_fuerza_electoral <- function(info, sf, analisis,nivel, interactiva=F){
 #'
 #' @examples
 
-fuerza_electoral_proxy <- function(info, sf, analisis,nivel, interactiva=F){
+fuerza_electoral_proxy <- function(proxy, info, sf, analisis,nivel, interactiva=F){
   nivel_mapa <- switch (nivel,
                         seccion = "SECCION", distrito="DISTRITO_F"
   )
@@ -333,7 +333,7 @@ fuerza_electoral_proxy <- function(info, sf, analisis,nivel, interactiva=F){
     ) %>%
       lapply(htmltools::HTML)
 
-      leaflet::addPolygons(
+      leaflet::addPolygons(map = proxy,
         data=mapa,
         fillColor = ~reescala,
         weight = 2,
