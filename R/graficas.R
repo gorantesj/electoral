@@ -258,6 +258,88 @@ graficar_fuerza_electoral <- function(info, sf, analisis,nivel, interactiva=F){
 
 }
 
+fuerza_electoral_proxy <- function(info, sf, analisis,nivel, interactiva=F){
+  nivel_mapa <- switch (nivel,
+                        seccion = "SECCION", distrito="DISTRITO_F"
+  )
+  color <- info$colores[analisis]
+  distrito <- info$bd %>% filter(!!sym(info$unidad_analisis)==info$id_unidad_analisis)
+  datos <- distrito %>%
+    group_by(!!sym(nivel)) %>%
+    summarise(across(glue::glue("votos_{info$competidores}"),
+                     ~sum(.x, na.rm = T)/sum(nominal, na.rm = T)))
+  datos <- datos[is.finite(rowSums(datos)),]
+  referencias <- datos %>%
+    rowwise() %>%
+    mutate(maximos=max(c_across(starts_with("votos_")),na.rm = T)) %>%
+    ungroup() %>%
+    summarise(maximo=max(maximos, na.rm = T),
+              mediana=quantile(maximos, na.rm=T, probs=.5))
+  maximo <- referencias %>% pull(maximo)
+  mediana <- referencias %>% pull(mediana)
+  datos <- datos %>% select(!!sym(nivel),glue::glue("votos_{analisis}" ))
+  sf<-sf %>% rename("{nivel}":=nivel_mapa)
+  mapa <- sf %>% left_join(datos)
+  mapa <- mapa %>%
+    mutate(reescala=scales::rescale_mid(scales::rescale(!!sym(glue::glue("votos_{analisis}")),
+                                                        from = c(0,maximo),
+                                                        to=c(0,1)),
+                                        from=c(0,1),
+                                        to=c(0,1),
+                                        mid=scales::rescale(mediana, from=c(0, maximo), to=c(0,1))))
+  pal <- scales::colour_ramp(c(colortools::complementary(color = color, plot = F)[[2]],
+                               "white",
+                               color),
+                             na.color = "grey30", alpha = FALSE)
+  mapa <- mapa %>% mutate(reescala=pal(reescala))
+  if(!interactiva){
+    ggplot() +
+      geom_sf(data = mapa,
+              aes(fill=reescala,
+                  geometry=geometry),size=.05, colour = "black",alpha=1) +
+      scale_fill_identity()+
+      ggtitle(label= "Distribución de apoyo  - Total de votos entre lista nominal")+
+      theme_void() +
+      labs(fill="Votos entre \nlista nominal") +
+      theme(text=element_text(family="Georgia"),
+            plot.title = element_text(family="Georgia", size = 11, hjust = 0.5),
+            legend.title = element_text(face = "bold", family = "Georgia", size=8),
+            legend.text = element_text(family = "Georgia", size=8),
+            plot.subtitle = element_text(size=5),
+      )
+
+  }
+  else{
+
+    labels <- sprintf(
+      "<strong>%s</strong><br/>%s",
+      paste(nivel, mapa %>% pull(!!sym(nivel))),
+      paste(glue::glue("{analisis}"),
+            mapa %>% pull(!!sym(glue::glue("votos_{analisis}"))) %>%
+              scales::percent(accuracy = 1))
+    ) %>%
+      lapply(htmltools::HTML)
+
+      leaflet::addPolygons(
+        data=mapa,
+        fillColor = ~reescala,
+        weight = 2,
+        opacity = 1,
+        color = "grey",
+        group = "Morena",
+        dashArray = "1",
+        fillOpacity = 0.7,
+        label = labels,
+        layerId = mapa[[nivel]],
+        highlight = highlightOptions(weight = 5, color = "black", fillOpacity = 1, bringToFront = T),
+        labelOptions = leaflet::labelOptions(
+          style = list("font-weight" = "normal", padding = "3px 8px"),
+          textsize = "15px",
+          direction = "auto"))
+  }
+
+}
+
 #' Title
 #'
 #' @param info
