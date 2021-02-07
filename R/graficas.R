@@ -249,7 +249,7 @@ graficar_fuerza_electoral <- function(info, sf, analisis,nivel, interactiva=F){
         fillOpacity = 0.7,
         label = labels,
         layerId = mapa[[nivel]],
-        highlight = highlightOptions(weight = 5, color = "black", fillOpacity = 1, bringToFront = T),
+        highlight = highlightOptions(weight = 5, color = "black", fillOpacity = 1, bringToFront = T, sendToBack = T),
         labelOptions = leaflet::labelOptions(
           style = list("font-weight" = "normal", padding = "3px 8px"),
           textsize = "15px",
