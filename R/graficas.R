@@ -176,7 +176,7 @@ graficar_distibucion <- function(info=info, analisis, comparar=F){
 #' @examples
 graficar_fuerza_electoral <- function(info, sf, analisis,nivel, interactiva=F){
   nivel_mapa <- switch (nivel,
-    seccion = "SECCION", distrito="DISTRITO_F"
+    seccion = "SECCION", distrito="DISTRITO"
   )
   color <- info$colores[analisis]
   distrito <- info$bd %>% filter(!!sym(info$unidad_analisis)==info$id_unidad_analisis)
@@ -193,9 +193,9 @@ graficar_fuerza_electoral <- function(info, sf, analisis,nivel, interactiva=F){
               mediana=quantile(maximos, na.rm=T, probs=.5))
   maximo <- referencias %>% pull(maximo)
   mediana <- referencias %>% pull(mediana)
-  datos <- datos %>% select(!!sym(nivel),glue::glue("votos_{analisis}" ))
+  datos <- datos %>% select(!!sym(nivel),glue::glue("votos_{analisis}"))
   sf<-sf %>% rename("{nivel}":=nivel_mapa)
-  mapa <- sf %>% left_join(datos)
+  mapa <- sf %>% inner_join(datos, by=nivel)
   mapa <- mapa %>%
     mutate(reescala=scales::rescale_mid(scales::rescale(!!sym(glue::glue("votos_{analisis}")),
                                     from = c(0,maximo),
