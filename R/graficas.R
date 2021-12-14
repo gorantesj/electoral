@@ -355,8 +355,8 @@ fuerza_electoral_proxy <- function(proxy, info, sf, analisis,nivel, interactiva=
 
 #' Title
 #'
-#' @param info
-#' @param sf
+#' @param info base de datos procesada con los votos para cada partido y cada coalición, dividida en secciones, distritos y estado.
+#' @param sf shapefile que se va a utilizar como la base del mapa
 #'
 #' @return
 #' @export
@@ -390,46 +390,11 @@ graficar_mapa_ganadores <- function(info, sf){
 
 
 
-
-
 #' Title
 #'
-#' @param info
-#' @param sf
-#'
-#' @return
-#' @export
-#'
-#' @examples
-graficar_mapa_ganadores <- function(info, sf){
-  datos <- info$bd %>%
-    filter(!!sym(info$unidad_analisis)==info$id_unidad_analisis) %>%
-    group_by(seccion) %>%
-    summarise(across(glue::glue("votos_{info$competidores}"), ~sum(.x,na.rm = T))) %>%
-    rowwise() %>%
-    mutate(ganador=info$competidores[which.max(c_across(glue::glue("votos_{info$competidores}")))])
-  mapa <- left_join(datos,  sf,by=c("seccion"="SECCION"))
-  ggplot() +
-    geom_sf(data = mapa,
-            aes(fill=ganador, geometry=geometry),
-            size=.05, colour = "black",alpha=0.6) +
-    scale_fill_manual(values = info$colores) +
-    ggtitle(label= "Ganadores")+
-    theme_void() +
-    theme(text=element_text(family="Georgia"),
-          plot.title = element_text(family="Georgia", size = 11, hjust = 0.5),
-          legend.title = element_text(face = "bold", family = "Georgia", size=8),
-          legend.text = element_text(family = "Georgia", size=8),
-          plot.subtitle = element_text(size=5),
-    )
-
-}
-
-#' Title
-#'
-#' @param partidos
-#' @param info_base
-#' @param info_contraste
+#' @param partidos vector de partidos cuyas elecciones se quieran contrastar
+#' @param info_base primera elección de interés
+#' @param info_contraste segunda elección de interés o elección de contraste
 #'
 #' @return
 #' @export
